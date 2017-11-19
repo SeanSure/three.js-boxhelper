@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+		<script type="text/javascript" src="js/three.min.js"></script>
+		<script type="text/javascript" src="js/TrackballControls.js"></script>
+	</head>
+
+	<body>
+		<script>
+			const rayobjects = new THREE.Object3D;
+			const arrowHelpers = new THREE.Object3D;
+			const lineObjects = new THREE.Object3D;
+			var raycaster = new THREE.Raycaster();
+			var mouse = new THREE.Vector2();
+			var intersects;
+			var normalMatrix = new THREE.Matrix3();
+			var worldNormal = new THREE.Vector3();
+			var lookAtVector = new THREE.Vector3();
+			var dragging = false;
+			var width = window.innerWidth,
+				height = window.innerHeight;
+			var scene = new THREE.Scene();
+			var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+			var renderer = new THREE.WebGLRenderer();
+
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			renderer.setClearColor(0xffffff, 0); // bg color
+			document.body.appendChild(renderer.domElement); // displays canvas
+
+			camera.position.z = 200; // move away to see coord center
+			camera.position.y = 100;
+			camera.position.x = 100;
+
+			controls = new THREE.TrackballControls(camera, renderer.domElement);
+			var helper = new THREE.GridHelper(2000, 100);
+			helper.material.opacity = 0.25;
+			helper.material.transparent = true;
+			//			scene.add(helper);
+			// CUBE
+			var geometry = new THREE.CubeGeometry(50, 100, 200);
+			var material = new THREE.MeshBasicMaterial({
+				transparent: true,
+				opacity: 0,
+			});
+			var cube = new THREE.Mesh(geometry, material);
+			var wireframe = new THREE.EdgesGeometry(geometry);
+
+			var line = new THREE.LineSegments(wireframe);
+			line.material.depthTest = false;
+			line.material.opacity = 1;
+			line.material.transparent = true;
+			line.name = 'box'
+			lineObjects.add(line)
+			scene.add(lineObjects);
+
+			var from = new THREE.Vector3(0, 50, 0);
+			var to = new THREE.Vector3(0, -50, 0);
+			var direction = to.clone().sub(from);
+			var length = direction.length();
+			var arrowHelper = new THREE.ArrowHelper(direction.normalize(), from, length, 0xffff00);
+			arrowHelper.name = 'arrowHelper'
+			arrowHelpers.add(arrowHelper)
+			scene.add(arrowHelpers);
+
+			var geometry_box = new THREE.PlaneGeometry(50, 200);
+			var material = new THREE.MeshBasicMaterial({
+				color: 0xffffff,
+				transparent: true,
+				opacity: 0.8,
+				side: THREE.DoubleSide
+			});
+			var plane = new THREE.Mesh(geometry_box, material);
+			var plane_edges = new THREE.EdgesGeometry(geometry_box);
+			var plane_line = new THREE.LineSegments(plane_edges, new THREE.LineBasicMaterial({
+				color: 0xff0000
+			}));
+
+			rayobjects.add(plane)
+			rayobjects.add(plane_line)
+			rayobjects.rotation.x = Math.PI / 2;
+			scene.add(rayobjects)
+			renderer.domElement.addEventListener("mousemove", onMouseMove, false);
+			renderer.domElement.addEventListener("mousedown", onMouseDown, false);
+			renderer.domElement.addEventListener("mouseup", onMouseUp, false);
+
+			function onMouseDown(event) {
+				if(intersects.length > 0) {
+					controls.enabled = false;
+					dragging = true;
+				}
+			}
+
+			function onMouseUp(event) {
+				controls.enabled = true;
+				dragging = false;
+			}
+
+			function onMouseMove(event) {
+				mouse.set((event.clientX / width) * 2 - 1, -(event.clientY / height) * 2 + 1);
+				raycaster.setFromCamera(mouse, camera);
+				intersects = raycaster.intersectObjects([cube]);
+				if(intersects.length == 0 || !dragging) return;
+				normalMatrix.getNormalMatrix(intersects[0].object.matrixWorld);
+				worldNormal.copy(intersects[0].face.normal).applyMatrix3(normalMatrix).normalize();
+				rayobjects.position.copy(intersects[0].point);
+
+				//				var leftz = -100;
+				//				var rightZ = 100;
+				rayobjects.position.x = 0;
+				rayobjects.position.x = 0;
+				rayobjects.position.z = 0;
+				rayobjects.position.z = 0;
+			}
+			var render = function() {
+
+				requestAnimationFrame(render);
+				controls.update();
+				renderer.render(scene, camera);
+			};
+
+			render();
+		</script>
+	</body>
+
+</html>
