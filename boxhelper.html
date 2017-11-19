@@ -10,16 +10,15 @@
 
 	<body>
 		<script>
-			const rayobjects = new THREE.Object3D;
-			const arrowHelpers = new THREE.Object3D;
-			const lineObjects = new THREE.Object3D;
+			const rayobjects = new THREE.Object3D; //create rayobjects to drag
+			const arrowHelpers = new THREE.Object3D; //create arrowHelper for direction
+			const lineObjects = new THREE.Object3D; //create lineobject just for show
 			var raycaster = new THREE.Raycaster();
 			var mouse = new THREE.Vector2();
 			var intersects;
+			var dragging = false;
 			var normalMatrix = new THREE.Matrix3();
 			var worldNormal = new THREE.Vector3();
-			var lookAtVector = new THREE.Vector3();
-			var dragging = false;
 			var width = window.innerWidth,
 				height = window.innerHeight;
 			var scene = new THREE.Scene();
@@ -30,16 +29,17 @@
 			renderer.setClearColor(0xffffff, 0); // bg color
 			document.body.appendChild(renderer.domElement); // displays canvas
 
-			camera.position.z = 200; // move away to see coord center
+			camera.position.z = 200;
 			camera.position.y = 100;
 			camera.position.x = 100;
 
 			controls = new THREE.TrackballControls(camera, renderer.domElement);
+			//gridhelper
 			var helper = new THREE.GridHelper(2000, 100);
 			helper.material.opacity = 0.25;
 			helper.material.transparent = true;
-			//			scene.add(helper);
-			// CUBE
+			scene.add(helper);
+			// box intersects
 			var geometry = new THREE.CubeGeometry(50, 100, 200);
 			var material = new THREE.MeshBasicMaterial({
 				transparent: true,
@@ -47,7 +47,7 @@
 			});
 			var cube = new THREE.Mesh(geometry, material);
 			var wireframe = new THREE.EdgesGeometry(geometry);
-
+			//box show
 			var line = new THREE.LineSegments(wireframe);
 			line.material.depthTest = false;
 			line.material.opacity = 1;
@@ -55,7 +55,7 @@
 			line.name = 'box'
 			lineObjects.add(line)
 			scene.add(lineObjects);
-
+			// arrowHelper in box 
 			var from = new THREE.Vector3(0, 50, 0);
 			var to = new THREE.Vector3(0, -50, 0);
 			var direction = to.clone().sub(from);
@@ -64,7 +64,7 @@
 			arrowHelper.name = 'arrowHelper'
 			arrowHelpers.add(arrowHelper)
 			scene.add(arrowHelpers);
-
+			// drag plane
 			var geometry_box = new THREE.PlaneGeometry(50, 200);
 			var material = new THREE.MeshBasicMaterial({
 				color: 0xffffff,
@@ -72,6 +72,7 @@
 				opacity: 0.8,
 				side: THREE.DoubleSide
 			});
+			//border of plane
 			var plane = new THREE.Mesh(geometry_box, material);
 			var plane_edges = new THREE.EdgesGeometry(geometry_box);
 			var plane_line = new THREE.LineSegments(plane_edges, new THREE.LineBasicMaterial({
@@ -105,10 +106,9 @@
 				if(intersects.length == 0 || !dragging) return;
 				normalMatrix.getNormalMatrix(intersects[0].object.matrixWorld);
 				worldNormal.copy(intersects[0].face.normal).applyMatrix3(normalMatrix).normalize();
+				//copy intersects position from box which is transparent
 				rayobjects.position.copy(intersects[0].point);
-
-				//				var leftz = -100;
-				//				var rightZ = 100;
+				//limits
 				rayobjects.position.x = 0;
 				rayobjects.position.x = 0;
 				rayobjects.position.z = 0;
